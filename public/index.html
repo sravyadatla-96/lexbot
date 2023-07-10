@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>React App</title>
+  </head>
+  <body>
+    <script src="https://d17k2wnsxb3zhw.cloudfront.net/lex-web-ui-loader.min.js"></script>
+    <script>
+      var loaderOpts = {
+        baseUrl: "https://d17k2wnsxb3zhw.cloudfront.net/",
+        shouldLoadMinDeps: true,
+      };
+      var loader = new ChatBotUiLoader.IframeLoader(loaderOpts);
+      var chatbotUiConfig = {
+        region: "us-east-1",
+        cognito: {
+          poolId: "us-east-1:3c40fce6-5f22-401a-a120-3ddf17da5b70",
+          appUserPoolClientId: "2m5j9plorl9pa8554k7th45u84",
+          appUserPoolName: "us-east-1_3RJN2BRiv",
+          appDomainName:
+            "lexkwebkuiktestkidentitypoolconfigkbmwdqemp062171769702.auth.us-east-1.amazoncognito.com",
+          aws_cognito_region: "us-east-1",
+          region: "us-east-1",
+        },
+        connect: {
+          contactFlowId: "",
+          instanceId: "",
+          apiGatewayEndpoint: "",
+          promptForNameMessage:
+            "Before starting a live chat, please tell me your name?",
+          waitingForAgentMessage:
+            "Thanks for waiting. An agent will be with you when available.",
+          waitingForAgentMessageIntervalSeconds: "60",
+          agentJoinedMessage: "{Agent} has joined.",
+          agentLeftMessage: "{Agent} has left.",
+          chatEndedMessage: "Chat ended.",
+          attachChatTranscript: "false",
+          liveChatTerms: "live chat",
+          transcriptMessageDelayInMsec: "150",
+        },
+        lex: {
+          v2BotId: "6OQQDP5AIF",
+          v2BotAliasId: "TSTALIASID",
+          v2BotLocaleId: "en_US",
+          botName: "6OQQDP5AIF",
+          botAlias: "$LATEST",
+          initialText:
+            'You can ask me for help in Financial Data.',
+          initialSpeechInstruction: "Say 'hi' to get started.",
+          initialUtterance: "",
+          reInitSessionAttributesOnRestart: false,
+          region: "us-east-1",
+          retryOnLexPostTextTimeout: "false",
+          retryCountPostTextTimeout: "1",
+        },
+        ui: {
+          parentOrigin: "https://main.d2cutuih7plmc8.amplifyapp.com",
+          toolbarTitle: "Financial Data",
+          toolbarLogo: "",
+          toolbarStartLiveChatLabel: "Start Live Chat",
+          toolbarEndLiveChatLabel: "End Live Chat",
+          toolbarStartLiveChatIcon: "people_alt",
+          toolbarEndLiveChatIcon: "call_end",
+          positiveFeedbackIntent: "Thumbs up",
+          negativeFeedbackIntent: "Thumbs down",
+          helpIntent: "Help",
+          minButtonContent: "",
+          backButton: false,
+          messageMenu: false,
+          hideButtonMessageBubble: false,
+          enableLogin: true,
+          enableLiveChat: false,
+          forceLogin: false,
+          AllowSuperDangerousHTMLInMessage: true,
+          shouldDisplayResponseCardTitle: false,
+          saveHistory: false,
+          helpContent: {},
+          enableSFX: false,
+          hideInputFieldsForButtonResponse: false,
+          pushInitialTextOnRestart: false,
+          directFocusToBotInput: false,
+          showDialogStateIcon: false,
+        },
+        polly: {
+          voiceId: "Salli",
+        },
+        recorder: {
+          preset: "speech_recognition",
+        },
+        iframe: {
+          iframeOrigin: "https://d17k2wnsxb3zhw.cloudfront.net",
+          shouldLoadIframeMinimized: false,
+          iframeSrcPath: "/index.html#/?lexWebUiEmbed=true",
+        },
+      };
+      loader.load(chatbotUiConfig).catch(function (error) {
+        console.error(error);
+      });
+    </script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
