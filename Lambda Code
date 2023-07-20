@@ -1,0 +1,205 @@
+import json 
+import boto3
+import io
+import openpyxl
+
+def validate(slots): 
+    years = ['2022', '2023','2024']
+    months = ['Jan', 'Feb', 'Mar']
+
+    if not slots['Year']:
+        return {
+            'isValid': False,
+            'violatedSlot': 'Year'
+        }
+
+    if slots['Year']['value']['originalValue'] not in years:
+        return {
+            'isValid': False,
+            'violatedSlot': 'Year',
+            'message': 'We currently support only {} as valid years.'.format(", ".join(years))
+        }
+
+    if not slots['Months']:
+        return {
+            'isValid': False,
+            'violatedSlot': 'Months'
+        }
+
+    if slots['Months']['value']['originalValue'] not in months:
+        return {
+            'isValid': False,
+            'violatedSlot': 'Months',
+            'message': 'We currently support only {} as valid months.'.format(", ".join(months))
+        }
+
+    Revenue_types = ['Total Revenue', 'Prod Rev', 'Cost of Rev', 'Gross Profit', 'Opex', 'EBITDA', 'Gross Margin', 'EBITDA Margin', 'Bookings']
+
+    if not slots['RevenueType']:
+        return {
+            'isValid': False,
+            'violatedSlot': 'RevenueType'
+        }
+
+    if slots['RevenueType']['value']['originalValue'] not in Revenue_types:
+        return {
+            'isValid': False,
+            'violatedSlot': 'RevenueType',
+            'message': 'We currently support only {} as Revenue_types.'.format(", ".join(Revenue_types))
+        }
+
+    return {'isValid': True}
+
+
+def lambda_handler(event, context):
+    print("#####################################")
+    print(event)
+    print("#####################################")
+    slots = event['sessionState']['intent']['slots']
+    intent = event['sessionState']['intent']['name']
+    validation_result = validate(event['sessionState']['intent']['slots'])
+
+    response = {}  # Initialize the response variable
+
+
+    if not validation_result['isValid']:
+        # Handle invalid slot
+        response = {
+            "sessionState": {
+                "dialogAction": {
+                    "type": "ElicitSlot",
+                    "slotToElicit": validation_result['violatedSlot']
+                },
+                "intent": {
+                    'name': intent,
+                    'slots': slots,
+                    'state': 'ElicitSlot'
+                }
+            },
+            "messages": [
+                {
+                    "contentType": "PlainText",
+                    "content": validation_result.get('message', 'Invalid value for {}'.format(validation_result['violatedSlot']))
+                }
+            ]
+        }
+    else:
+        # Set up Amazon S3 credentials
+        access_key = 'AKIAQ46NZ5NTKNYXEWUY'
+        secret_key = 'XRptdqQGYRSMhj1LyrKvko1HS82jFsmqOVy1CZ/a'
+        bucket_name = 'aws-usecase123'
+        file_key = 'revenuedata.xlsx'  # Replace with the key of your Excel file in S3
+
+        # Create an S3 client
+        s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+
+        # Download the Excel file from S3
+        file_obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+        file_content = file_obj['Body'].read()
+
+        # Load the Excel file from memory
+        workbook = openpyxl.load_workbook(io.BytesIO(file_content)) 
+
+        # Select the worksheet
+        worksheet = workbook['Sheet1']  # Replace 'Sheet1' with the actual sheet name
+
+        # Create a multi-map to store the values
+        data_map = {}
+
+        # Iterate over the rows in the worksheet
+        for row in worksheet.iter_rows(values_only=True):
+            map_key = row[0]  # Assuming the map key is in the first column
+            if map_key not in data_map:
+                data_map[map_key] = {}
+
+            # Iterate over the remaining columns to populate the inner map
+            for i, value in enumerate(row[1:], start=1):
+                inner_key = worksheet.cell(row=1, column=i + 1).value  # Assuming the inner map key is in the first row
+                data_map[map_key][inner_key] = value
+
+        # Print the multi-map
+        for map_key, inner_map in data_map.items():
+            print(f"Map Key: {map_key}")
+            for inner_key, value in inner_map.items():
+                print(f"\tInner Key: {inner_key}\tValue: {value}")
+                
+        
+        row_key = slots['RevenueType']['value']['originalValue']
+        column_key = slots['Months']['value']['originalValue'] + '-' + slots['Year']['value']['originalValue'] 
+        
+        
+        print("Row key:", row_key)
+        print("Column key:", column_key)
+        print("Data map:", data_map)
+
+        if row_key in data_map and column_key in data_map[row_key]:
+            value = data_map[row_key][column_key]
+            response = {
+                "sessionState": {
+                    "dialogAction": { 
+                        "type": "Close"
+                    },
+                    "intent": {
+                        'name': intent,
+                        'slots': slots,
+                        'state': 'Fulfilled'
+                    }
+                },
+                "messages": [
+                    {
+                        "contentType": "PlainText",
+                        "content": f"The value of {column_key} for {row_key} is {value}"
+                    } 
+                ]
+            }
+        else:
+            response = {
+                "sessionState": {
+                    "dialogAction": {
+                        "type": "Close"
+                    },
+                    "intent": {
+                        'name': intent, 
+                        'slots': slots,
+                        'state': 'Fulfilled' 
+                    }
+                },
+                "messages": [
+                    {
+                        "contentType": "PlainText",
+                        "content":  f"Value not found for {column_key} and {row_key}"
+                    }
+                ]
+            }
+
+    return response
+
+
+# Test the lambda_handler
+event_data = {
+    'sessionState': {
+        'intent': {
+            'name': 'TestIntent',
+            'slots': {
+                'Year': {
+                    'value': {
+                        'originalValue': '2022'
+                    }
+                },
+                'Months': {
+                    'value': {
+                        'originalValue': 'Feb'
+                    }
+                },
+                'RevenueType': {
+                    'value': {
+                        'originalValue': 'Gross Margin'
+                    }
+                }
+            }
+        }
+    }
+}
+
+response = lambda_handler(event_data, None)
+print(json.dumps(response, indent=4))
